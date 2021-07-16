@@ -34,11 +34,14 @@ import org.json.JSONObject
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object InstrumentUtility {
   const val ANALYSIS_REPORT_PREFIX = "analysis_log_"
+  const val ANR_REPORT_PREFIX = "anr_log_"
   const val CRASH_REPORT_PREFIX = "crash_log_"
   const val CRASH_SHIELD_PREFIX = "shield_log_"
   const val THREAD_CHECK_PREFIX = "thread_check_log_"
   const val ERROR_REPORT_PREFIX = "error_log_"
   private const val FBSDK_PREFIX = "com.facebook"
+  private const val CODELESS_PREFIX = "com.facebook.appevents.codeless"
+  private const val SUGGESTED_EVENTS_PREFIX = "com.facebook.appevents.suggestedevents"
   private const val INSTRUMENT_DIR = "instrument"
 
   /**
@@ -84,6 +87,22 @@ object InstrumentUtility {
   }
 
   /**
+   * Get the stack trace of the input Thread.
+   *
+   * @param thread The Thread to obtain the stack trace
+   * @return The String containing the stack traces of the raised exception
+   */
+  @JvmStatic
+  fun getStackTrace(thread: Thread): String? {
+    val stackTrace = thread.stackTrace
+    val array = JSONArray()
+    for (element in stackTrace) {
+      array.put(element.toString())
+    }
+    return array.toString()
+  }
+
+  /**
    * Check whether a Throwable is related to Facebook SDK by looking at iterated stack traces and
    * return true if one of the traces has prefix "com.facebook".
    *
@@ -112,13 +131,62 @@ object InstrumentUtility {
   }
 
   /**
+   * Check whether an Thread is related to Facebook SDK by looking at iterated stack traces
+   *
+   * @param thread The Thread to obtain the stack trace
+   * @return Whether the thread is related to Facebook SDK
+   */
+  @JvmStatic
+  fun isSDKRelatedThread(thread: Thread?): Boolean {
+
+    // Iterate on thread's stack traces
+    thread?.stackTrace?.forEach { element ->
+      if (element.className.startsWith(FBSDK_PREFIX)) {
+
+        // Ignore the ANR caused by calling app itself's click listener or touch listener
+        if (element.className.startsWith(CODELESS_PREFIX) ||
+            element.className.startsWith(SUGGESTED_EVENTS_PREFIX)) {
+          if (element.methodName.startsWith("onClick") ||
+              element.methodName.startsWith("onItemClick") ||
+              element.methodName.startsWith("onTouch")) {
+            return@forEach
+          }
+        }
+
+        return true
+      }
+    }
+
+    return false
+  }
+
+  /**
+   * Get the list of anr report files from instrument report directory defined in
+   * [InstrumentUtility.getInstrumentReportDir] method.
+   *
+   * Note that the function should be called after FacebookSdk is initialized. Otherwise, exception
+   * FacebookSdkNotInitializedException will be thrown.
+   *
+   * @return The list of anr files
+   */
+  @JvmStatic
+  fun listAnrReportFiles(): Array<File> {
+    val reportDir = getInstrumentReportDir() ?: return arrayOf()
+    val reports =
+        reportDir.listFiles { _, name ->
+          name.matches(String.format("^%s[0-9]+.json$", ANR_REPORT_PREFIX).toRegex())
+        }
+    return reports ?: arrayOf()
+  }
+
+  /**
    * Get the list of exception analysis report files from instrument report directory defined in
    * [InstrumentUtility.getInstrumentReportDir] method.
    *
    * Note that the function should be called after FacebookSdk is initialized. Otherwise, exception
    * FacebookSdkNotInitializedException will be thrown.
    *
-   * @return The list of crash report files
+   * @return The list of exception analysis report files
    */
   @JvmStatic
   fun listExceptionAnalysisReportFiles(): Array<File> {

@@ -20,7 +20,6 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 project.group 'com.facebook.android'
 
@@ -30,7 +29,7 @@ project.ext.description = 'Facebook Android SDK'
 project.ext.url = 'https://github.com/facebook/facebook-android-sdk'
 
 dependencies {
-    def kotlin_ver = '1.3.31'
+    def kotlin_ver = project.ext.kotlinVersion
 
     // Facebook Dependencies
     api project(':facebook-core')
@@ -40,6 +39,7 @@ dependencies {
     api project(":facebook-applinks")
     api project(":facebook-messenger")
     api project(":facebook-gamingservices")
+    testImplementation project(":facebook-testutil")
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_ver"
     // Unit Tests
@@ -101,7 +101,6 @@ android {
             java {
                 exclude '**/MonitorTest.java'
                 exclude '**/MonitorLoggingManagerTest.java'
-                exclude '**/AppEventsLoggerImplTest.java'
                 exclude '**/UserSettingsManagerTest.java'
                 exclude '**/LoginManagerTest.java'
 

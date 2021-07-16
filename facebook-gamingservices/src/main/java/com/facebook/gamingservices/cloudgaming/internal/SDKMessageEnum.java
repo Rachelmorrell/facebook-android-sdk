@@ -52,7 +52,9 @@ public enum SDKMessageEnum {
   GET_TOURNAMENT_ASYNC("getTournamentAsync"),
   TOURNAMENT_CREATE_ASYNC("tournamentCreateAsync"),
   TOURNAMENT_SHARE_ASYNC("tournamentShareAsync"),
-  TOURNAMENT_POST_SCORE_ASYNC("tournamentPostScoreAsync");
+  TOURNAMENT_POST_SCORE_ASYNC("tournamentPostScoreAsync"),
+  OPEN_LINK("openExternalLink"),
+  PERFORM_HAPTIC_FEEDBACK_ASYNC("performHapticFeedbackAsync");
 
   private final String mStringValue;
 

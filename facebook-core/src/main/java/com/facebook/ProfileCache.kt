@@ -24,7 +24,7 @@ import android.content.SharedPreferences
 import org.json.JSONException
 import org.json.JSONObject
 
-internal class ProfileCache {
+class ProfileCache {
   private val sharedPreferences: SharedPreferences
   fun load(): Profile? {
     val jsonString = sharedPreferences.getString(CACHED_PROFILE_KEY, null)
